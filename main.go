@@ -150,7 +150,18 @@ func (d *Driver) PutFile(path string, data io.Reader, appendData bool) (int64, e
 	}
 	defer f.Close()
 
-	return io.Copy(f, data)
+	n, err := io.Copy(f, data)
+	if err != nil {
+		return 0, err
+	}
+	cdr, err := DecodeCDRFile(absPath)
+	if err != nil {
+		return 0, err
+	}
+
+	fmt.Println("\nthe [Decoded CDR File]: ", cdr)
+
+	return n, nil
 }
 
 // FileInfo implements server.FileInfo
