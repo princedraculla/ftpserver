@@ -110,7 +110,7 @@ func decodeCdrHdrTimeStamp(ts uint32) CdrHdrTimeStamp {
 	}
 }
 
-func DecodeCDRFile(filename string) (*CDRFile, error) {
+func (c *CDRFile) DecodeCDRFile(filename string) (*CDRFile, error) {
 	data, err := os.ReadFile(filename)
 	if err != nil {
 		return nil, err

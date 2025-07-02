@@ -135,6 +135,7 @@ func (d *Driver) GetFile(path string, offset int64) (int64, io.ReadCloser, error
 
 func (d *Driver) PutFile(path string, data io.Reader, appendData bool) (int64, error) {
 	absPath := d.realPath(path)
+	cdrFile := &CDRFile{}
 
 	var f *os.File
 	var err error
@@ -154,7 +155,7 @@ func (d *Driver) PutFile(path string, data io.Reader, appendData bool) (int64, e
 	if err != nil {
 		return 0, err
 	}
-	cdr, err := DecodeCDRFile(absPath)
+	cdr, err := cdrFile.DecodeCDRFile(absPath)
 	if err != nil {
 		return 0, err
 	}
