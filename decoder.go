@@ -4,6 +4,12 @@ import (
 	"encoding/binary"
 	"fmt"
 	"os"
+	"path/filepath"
+)
+
+var (
+	cdrStorage = "/home/amir/ftp_files/var/CDRs/1"
+	cdrFormat  = ".cdr"
 )
 
 type TsNumberIdentifier uint8
@@ -193,4 +199,21 @@ func (c *CDRFile) DecodeCDRFile(filename string) (*CDRFile, error) {
 	}
 
 	return cdrFile, nil
+}
+
+func DatFiles() ([]string, error) {
+	entries,err := os.ReadDir(cdrStorage)
+	if err != nil {
+		return nil, err
+	}
+	var files []string
+
+	for _, entrie := range entries {
+		if !entrie.IsDir() {
+			files = append(files, filepath.Join(cdrStorage, entrie.Name()))
+		}
+	}
+	fmt.Println("founded files : ", files)
+
+	return files, nil
 }

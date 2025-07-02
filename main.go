@@ -12,6 +12,7 @@ import (
 )
 
 func main() {
+	cdrFile := &CDRFile{}
 	factory := &DriverFactory{
 		RootPath: "/home/amir/ftp_files",
 	}
@@ -34,6 +35,18 @@ func main() {
 	err := ftpServer.ListenAndServe()
 	if err != nil {
 		log.Fatal("Error starting server:", err)
+	}
+
+	files, err := DatFiles()
+	if err != nil {
+		log.Fatal("found error : ", err)
+	}
+	for _, file := range files {
+		cdr, err := cdrFile.DecodeCDRFile(file)
+		if err != nil {
+			log.Fatal("error while decoding cdr : ", err)
+		}
+		fmt.Println("the decoded CDR : ", cdr)
 	}
 }
 
@@ -137,18 +150,23 @@ func (d *Driver) PutFile(path string, data io.Reader, appendData bool) (int64, e
 	absPath := d.realPath(path)
 	cdrFile := &CDRFile{}
 
+	fmt.Println("the absolute path for the file : ", absPath)
+
 	var f *os.File
 	var err error
 
 	if appendData {
 		f, err = os.OpenFile(absPath, os.O_APPEND|os.O_WRONLY, 0644)
+		if err != nil {
+			return 0, nil
+		}
 	} else {
 		f, err = os.Create(absPath)
+		if err != nil {
+			return 0, nil
+		}
 	}
 
-	if err != nil {
-		return 0, err
-	}
 	defer f.Close()
 
 	n, err := io.Copy(f, data)
@@ -159,9 +177,7 @@ func (d *Driver) PutFile(path string, data io.Reader, appendData bool) (int64, e
 	if err != nil {
 		return 0, err
 	}
-
-	fmt.Println("\nthe [Decoded CDR File]: ", cdr)
-
+	fmt.Println("[Decoded CDR File] : ", cdr)
 	return n, nil
 }
 
