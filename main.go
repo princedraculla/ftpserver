@@ -12,7 +12,6 @@ import (
 )
 
 func main() {
-	cdrFile := &CDRFile{}
 	factory := &DriverFactory{
 		RootPath: "/home/amir/ftp_files",
 	}
@@ -35,18 +34,6 @@ func main() {
 	err := ftpServer.ListenAndServe()
 	if err != nil {
 		log.Fatal("Error starting server:", err)
-	}
-
-	files, err := DatFiles()
-	if err != nil {
-		log.Fatal("found error : ", err)
-	}
-	for _, file := range files {
-		cdr, err := cdrFile.DecodeCDRFile(file)
-		if err != nil {
-			log.Fatal("error while decoding cdr : ", err)
-		}
-		fmt.Println("the decoded CDR : ", cdr)
 	}
 }
 
@@ -173,11 +160,22 @@ func (d *Driver) PutFile(path string, data io.Reader, appendData bool) (int64, e
 	if err != nil {
 		return 0, err
 	}
+	if err := f.Sync(); err != nil {
+		log.Printf("Failed to sync file %s: %v", absPath, err)
+		return 0, err
+	}
+	log.Printf("Received file %s: wrote %d bytes", absPath, n)
+
 	cdr, err := cdrFile.DecodeCDRFile(absPath)
 	if err != nil {
 		return 0, err
 	}
-	fmt.Println("[Decoded CDR File] : ", cdr)
+	log.Printf("Decoded CDR File: FileLength=%d, NumberOfCdrs=%d, IPAddress=%v",
+		cdr.Hdr.FileLength, cdr.Hdr.NumberOfCdrsInFile, cdr.Hdr.IPAddressOfNodeThatGeneratedFile)
+	for i, cdr := range cdr.CdrList {
+		log.Printf("CDR %d: Length=%d, ReleaseIdentifier=%d, VersionIdentifier=%d",
+			i, cdr.Hdr.CdrLength, cdr.Hdr.ReleaseIdentifier, cdr.Hdr.VersionIdentifier)
+	}
 	return n, nil
 }
 
